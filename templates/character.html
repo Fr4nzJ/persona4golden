@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ character.name }} - Persona 4 Golden</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/' ~ character.img) }}">
+</head>
+<body>
+     <header>
+        <h1>Persona 4 Golden</h1>
+    </header>
+  <nav class="navbar">
+  <ul>
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('team') }}">Team</a></li>
+    <li><a href="{{ url_for('stats') }}">Stats</a></li>
+    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+  </ul>
+  </nav>
+
+  <section class="character-detail">
+    <div class="container">
+      <h2>{{ character.name }}</h2>
+      <div class="character-card">
+        <img src="{{ url_for('static', filename='images/' ~ character.img) }}" alt="{{ character.name }}">
+        <div class="character-info">
+          <p><strong>Arcana:</strong> {{ character.arcana }}</p>
+          <p><strong>Role:</strong> {{ character.role }}</p>
+          <p><strong>Persona:</strong> {{ character.persona }}</p>
+          <p><strong>Element:</strong> {{ character.element }}</p>
+          <p><strong>Description:</strong> {{ character.desc }}</p>
+          <p><strong>Skills:</strong></p>
+          <ul>
+            {% for skill in character.skills %}
+              <li>{{ skill }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div class="persona-evolution">
+        <h3>Persona Evolution</h3>
+        <div class="evolution-flow">
+          {% for stage in character.persona_evolution %}
+            <div class="evolution-stage">
+              <img src="{{ url_for('static', filename='images/' ~ stage.img) }}" alt="{{ stage.name }}">
+              <p>{{ stage.name }}</p>
+            </div>
+            {% if not loop.last %}
+              <div class="evolution-arrow">→</div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      
+      <a href="{{ url_for('team') }}" class="back-button">← Back to Team</a>
+    </div>
+    
+  </section>
+</body>
+</html>

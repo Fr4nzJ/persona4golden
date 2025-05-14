@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="navbar">
+  <ul>
+    <li><a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a></li>
+    <li><a href="{{ url_for('admin_logout') }}">Logout</a></li>
+  </ul>
+</nav>
+<div class="admin wrapper profile">
+  <h2 class="title">User Management</h2>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Steam Name</th>
+        <th>Steam ID</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.steam_name or '' }}</td>
+        <td>{{ user.steam_id or '' }}</td>
+        <td>
+          <a href="{{ url_for('admin_edit_user', email=user.email) }}" class="btn profile-edit-btn">Edit</a>
+          <form action="{{ url_for('admin_delete_user', email=user.email) }}" method="POST" style="display:inline;">
+            <button type="submit" class="btn profile-logout-btn" onclick="return confirm('Delete this user?');">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Persona 4 Golden Party Members</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/yu.png') }}">
+</head>      
+<body>
+     <header>
+        <h1>Persona 4 Golden</h1>
+    </header>
+  <nav class="navbar">
+    <ul>
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('team') }}">Team</a></li>
+    <li><a href="{{ url_for('stats') }}">Stats</a></li>
+    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+  </ul>
+  </nav>
+
+  <!-- 🔊 Background Music -->
+  <audio id="bgm" autoplay loop>
+    <source src="{{ url_for('static', filename='audio/your_bgm2.ogg') }}" type="audio/ogg">
+    <source src="{{ url_for('static', filename='audio/your_bgm2.mp3') }}" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <button id="toggleMusic">🔊 Mute</button>
+
+  <!-- 🧑‍🤝‍🧑 Character Section -->
+  <section class="team_section">
+    <div class="container">
+      <h2>Persona 4 Golden Party Members</h2>
+      <div class="grid">
+        {% for character in characters %}
+        <a href="{{ url_for('character_detail', slug=character.slug) }}" class="card-link">
+          <div class="card">
+            <img src="{{ url_for('static', filename='images/' ~ character.img) }}" alt="{{ character.name }}">
+            <h3>{{ character.name }}</h3>
+            <h4>{{ character.role }}</h4>
+            <p>{{ character.desc }}</p>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const bgm = document.getElementById("bgm");
+    const toggleBtn = document.getElementById("toggleMusic");
+
+    bgm.play().then(() => {
+      console.log("BGM playing");
+    }).catch(e => {
+      console.warn("Autoplay blocked:", e);
+      bgm.muted = true;
+      bgm.play();
+      toggleBtn.textContent = "🔇 Unmute";
+    });
+
+    toggleBtn.addEventListener("click", () => {
+      bgm.muted = !bgm.muted;
+      toggleBtn.textContent = bgm.muted ? "🔇 Unmute" : "🔊 Mute";
+    });
+  </script>
+</body>
+</html>

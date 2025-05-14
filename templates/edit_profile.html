@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<body class="login-signup">
+  <div class="wrapper edit-profile">
+    <h2 class="title">Edit Profile</h2>
+    <form method="POST" class="edit-profile-form" autocomplete="off" onsubmit="saveProfilePic()">
+      <div class="profile-pic-container" style="margin-bottom:18px;">
+        <img id="edit-profile-pic" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile Picture" class="profile-pic">
+      </div>
+      <div class="field">
+        <input type="file" id="profilePicInput" accept="image/*" style="color:#FFD700;">
+        <label style="top:-18px;">Change Profile Picture</label>
+      </div>
+      <div class="field">
+        <input type="text" name="username" value="{{ user.username }}" required placeholder=" ">
+        <label>Username</label>
+      </div>
+      <div class="field">
+        <input type="email" name="email" value="{{ user.email }}" required placeholder=" ">
+        <label>Email</label>
+      </div>
+      <div class="field">
+        <input type="password" name="password" placeholder=" ">
+        <label>New Password (leave blank to keep current)</label>
+      </div>
+      <div class="field">
+        <input type="submit" value="Save Changes">
+      </div>
+    </form>
+    <div class="profile-actions" style="margin-top:10px;">
+      <a href="{{ url_for('profile') }}" class="btn profile-cancel-btn">Cancel</a>
+    </div>
+  </div>
+  <script>
+    // Load current profile picture preview
+    const currentPic = localStorage.getItem('profilePic');
+    if (currentPic) {
+      document.getElementById('edit-profile-pic').src = currentPic;
+    }
+    // Preview and save to localStorage
+    document.getElementById('profilePicInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('edit-profile-pic').src = evt.target.result;
+        localStorage.setItem('profilePic', evt.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+    // Save on submit (optional, since we already save on change)
+    function saveProfilePic() {
+      // No-op, handled above
+    }
+  </script>
+</body>
+{% endblock %}

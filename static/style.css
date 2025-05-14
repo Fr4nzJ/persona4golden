@@ -1,0 +1,873 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+body {
+  font-family: 'Orbitron', sans-serif;
+  background: #121212;
+  color: #FFD700;
+  margin: 0;
+  padding: 0;
+  background-image: radial-gradient(#1c1c1c 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 40px 20px;
+}
+
+h2 {
+  text-align: center;
+  font-size: 2.5em;
+  text-shadow: 2px 2px 0 black;
+  margin-bottom: 50px;
+  border-bottom: 4px solid #FFD700;
+  padding-bottom: 10px;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+}
+
+.card {
+  background: #1f1f1f;
+  border: 2px solid #FFD700;
+  border-radius: 12px;
+  width: 220px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  padding: 15px;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.9);
+}
+
+.card img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border: 2px solid #FFD700;
+}
+
+.card h3 {
+  font-size: 1.3em;
+  margin: 8px 0 2px;
+}
+
+.card h4 {
+  font-size: 0.95em;
+  color: #ffef87;
+  margin: 2px 0 10px;
+}
+
+.card p {
+  font-size: 0.85em;
+  color: #ccc;
+}
+
+a {
+  color: #FFD700;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* === Scanline Overlay Effect === */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* === Hover Glow Animation === */
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+  50% { box-shadow: 0 0 25px rgba(255, 215, 0, 1); }
+  100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+}
+
+.card:hover {
+  animation: glowPulse 1.5s infinite;
+}
+
+.home-screen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40px;
+}
+
+.home-screen h1 {
+  font-size: 3em;
+  margin-bottom: 20px;
+  color: #FFD700;
+  text-shadow: 3px 3px 0 black;
+}
+
+.home-screen p {
+  font-size: 1.2em;
+  color: #e0e0e0;
+  margin-bottom: 30px;
+}
+
+.btn {
+  background-color: #FFD700;
+  color: #121212;
+  padding: 15px 30px;
+  font-size: 1em;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background-color: #ffea00;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
+}
+
+.video-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 720px;
+  margin-bottom: 30px;
+  border: 4px solid #FFD700;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.video-container video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.video-mute-btn {
+  z-index: 2;
+  background: rgba(30,30,30,0.8);
+  color: #FFD700;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.5em;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: background 0.2s, color 0.2s;
+}
+
+.video-mute-btn:hover {
+  background: #FFD700;
+  color: #181818;
+}
+
+#unmuteVideo {
+  position: absolute;
+  top: 0%;
+  left: 5%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #FFD700;
+  font-size: 1.2em;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  transition: background-color 0.3s;
+}
+
+#unmuteVideo:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.stats_section {
+  padding: 60px 20px;
+  background-color: #1a1a1a;
+}
+
+.stats_section h2 {
+  text-align: center;
+  font-size: 2.5em;
+  color: #FFD700;
+  margin-bottom: 40px;
+  text-shadow: 2px 2px 0 black;
+}
+
+.stats_section .grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+}
+
+.stats_section .card {
+  background: #2a2a2a;
+  border: 2px solid #FFD700;
+  border-radius: 12px;
+  width: 250px;
+  text-align: center;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stats_section .card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.9);
+}
+
+.stats_section .card img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 2px solid #FFD700;
+}
+
+.stats_section .card h3 {
+  font-size: 1.4em;
+  margin-bottom: 10px;
+  color: #FFD700;
+}
+
+.stats_section .card p {
+  font-size: 0.95em;
+  color: #ccc;
+  margin: 5px 0;
+}
+
+/* Navbar styles */
+.navbar {
+  background: #222;
+  padding: 0 0 0 0;
+  margin-bottom: 30px;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 2px 8px rgba(255,215,0,0.08);
+}
+.navbar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+}
+.navbar li {
+  display: inline;
+}
+.navbar a {
+  color: #FFD700;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.1em;
+  padding: 18px 10px 14px 10px;
+  display: inline-block;
+  transition: color 0.2s;
+}
+.navbar a:hover, .navbar a.active {
+  color: #ffea00;
+  border-bottom: 2px solid #ffea00;
+}
+
+.card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.persona-evolution {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.evolution-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.evolution-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.evolution-stage img {
+  width: 500px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.evolution-arrow {
+  font-size: 1.5rem;
+  color: #555;
+}
+
+/* === Login and Signup Pages Styles === */
+.login-signup {
+  background: #121212;
+  color: #FFD700;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.login-signup .wrapper {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.login-signup .title {
+  font-size: 2.5em;
+  color: #FFD700;
+  text-align: center;
+  text-shadow: 2px 2px 0 black;
+  margin-bottom: 20px;
+}
+
+.login-signup .field {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.login-signup .field input {
+  width: 100%;
+  padding: 10px;
+  background: #2a2a2a;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  font-size: 1.1em;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.login-signup .field input:focus {
+  border-color: #ffea00;
+}
+
+.login-signup .field label {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  color: #FFD700;
+  font-size: 0.9em;
+  transition: 0.3s;
+}
+
+.login-signup .field input:focus + label,
+.login-signup .field input:not(:placeholder-shown) + label {
+  top: -15px;
+  font-size: 0.8em;
+  color: #ffea00;
+}
+
+.login-signup .content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.login-signup .checkbox {
+  color: #FFD700;
+  font-size: 0.9em;
+}
+
+.login-signup .pass-link a {
+  color: #FFD700;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.login-signup .pass-link a:hover {
+  text-decoration: underline;
+}
+
+.login-signup .field input[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background: #FFD700;
+  color: #121212;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.login-signup .field input[type="submit"]:hover {
+  background: #ffea00;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
+}
+
+.login-signup .signup-link {
+  text-align: center;
+  margin-top: 20px;
+  color: #FFD700;
+}
+
+.login-signup .signup-link a {
+  color: #FFD700;
+  text-decoration: none;
+}
+
+.login-signup .signup-link a:hover {
+  text-decoration: underline;
+}
+
+.login-signup .pass-link,
+.login-signup .checkbox {
+  color: #FFD700;
+}
+
+.login-signup .field input[type="email"] {
+  text-transform: lowercase;
+}
+
+.login-signup .wrapper.login {
+  background: #1e1e1e;
+}
+
+.login-signup .signup-link a {
+  color: #ffea00;
+  text-decoration: none;
+}
+
+.login-signup .wrapper.signup {
+  background: #1e1e1e;
+}
+
+/* === Profile & Edit Profile Styles (Unified with Auth Pages) === */
+.wrapper.profile,
+.wrapper.edit-profile {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 30px 25px 25px 25px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.wrapper.profile .title,
+.wrapper.edit-profile .title {
+  font-size: 2.2em;
+  color: #FFD700;
+  text-align: center;
+  text-shadow: 2px 2px 0 black;
+  margin-bottom: 18px;
+}
+
+.profile-info {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: #FFD700;
+  text-align: center;
+}
+
+.profile-pic-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.profile-pic {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #FFD700;
+  object-fit: cover;
+  background: #222;
+}
+
+.profile-details {
+  margin-bottom: 20px;
+}
+
+.profile-field {
+  font-size: 1.1em;
+  margin: 8px 0;
+  color: #FFD700;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.profile-edit-btn,
+.profile-logout-btn,
+.profile-cancel-btn {
+  width: 48%;
+  padding: 10px 0;
+  background-color: #FFD700;
+  color: #121212;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.profile-edit-btn:hover,
+.profile-logout-btn:hover,
+.profile-cancel-btn:hover {
+  background: #ffea00;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
+}
+
+.wrapper.edit-profile .edit-profile-form .field {
+  margin-bottom: 20px;
+}
+
+.wrapper.edit-profile .edit-profile-form input[type="text"],
+.wrapper.edit-profile .edit-profile-form input[type="email"],
+.wrapper.edit-profile .edit-profile-form input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  background: #2a2a2a;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  font-size: 1.1em;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.wrapper.edit-profile .edit-profile-form label {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  color: #FFD700;
+  font-size: 0.9em;
+  transition: 0.3s;
+  pointer-events: none;
+}
+
+.wrapper.edit-profile .edit-profile-form input:focus + label,
+.wrapper.edit-profile .edit-profile-form input:not(:placeholder-shown) + label {
+  top: -15px;
+  font-size: 0.8em;
+  color: #ffea00;
+}
+
+.wrapper.edit-profile .edit-profile-form input[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background: #FFD700;
+  color: #121212;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.wrapper.edit-profile .edit-profile-form input[type="submit"]:hover {
+  background: #ffea00;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
+}
+
+/* === Verify Page Styles === */
+.wrapper.verify {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 30px 25px 25px 25px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.wrapper.verify .title {
+  font-size: 2.2em;
+  color: #FFD700;
+  text-align: center;
+  text-shadow: 2px 2px 0 black;
+  margin-bottom: 18px;
+}
+
+.wrapper.verify p {
+  color: #FFD700;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.wrapper.verify .error {
+  color: #ff4d4d;
+  background: #222;
+  border: 1px solid #ff4d4d;
+  border-radius: 6px;
+  padding: 8px 0;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.wrapper.verify .field {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.wrapper.verify .field input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  background: #2a2a2a;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  font-size: 1.1em;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.wrapper.verify .field label {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  color: #FFD700;
+  font-size: 0.9em;
+  transition: 0.3s;
+  pointer-events: none;
+}
+
+.wrapper.verify .field input:focus + label,
+.wrapper.verify .field input:not(:placeholder-shown) + label {
+  top: -15px;
+  font-size: 0.8em;
+  color: #ffea00;
+}
+
+.wrapper.verify .field input[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background: #FFD700;
+  color: #121212;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.wrapper.verify .field input[type="submit"]:hover {
+  background: #ffea00;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
+}
+
+.wrapper.verify .resend-link a {
+  color: #FFD700;
+  text-decoration: underline;
+  font-size: 0.98em;
+}
+
+.wrapper.verify .resend-link a:hover {
+  color: #ffea00;
+}
+
+.profile-pic-container input[type="file"] {
+  color: #FFD700;
+  background: none;
+  border: none;
+  margin-top: 8px;
+}
+
+.profile-link {
+  position: absolute;
+  top: 18px;
+  right: 32px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-link .profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #FFD700;
+  object-fit: cover;
+  background: #222;
+}
+
+.profile-link .profile-username {
+  color: #FFD700;
+  font-weight: bold;
+  font-size: 1.1em;
+  text-shadow: 1px 1px 2px #181818;
+}
+
+/* Steam Button Styles */
+.steam-btn {
+  background: #171a21;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: bold;
+  font-size: 1.1em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+.steam-btn:hover {
+  background: #2a475e;
+  color: #FFD700;
+}
+
+/* Steam Section Styles */
+.steam-section h3 {
+  color: #FFD700;
+  margin-bottom: 10px;
+}
+.steam-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.steam-btn {
+  background: #171a21;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: bold;
+  font-size: 1em;
+  transition: background 0.2s;
+}
+.steam-btn:hover {
+  background: #2a475e;
+  color: #FFD700;
+}
+
+/* Admin Table Styles */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  color: #FFD700;
+  background: #181818;
+}
+.admin-table th, .admin-table td {
+  border: 1px solid #FFD700;
+  padding: 10px;
+  text-align: left;
+}
+.admin-table th {
+  background: #222;
+}
+.admin-table tr:nth-child(even) {
+  background: #222;
+}
+.admin.wrapper.profile {
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 30px 25px 25px 25px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+/* Admin/User Edit Form Fields */
+.wrapper.profile .field {
+  margin-bottom: 22px;
+  position: relative;
+}
+
+.wrapper.profile input[type="text"],
+.wrapper.profile input[type="email"],
+.wrapper.profile input[type="password"] {
+  width: 100%;
+  max-width: 370px;
+  padding: 12px 14px;
+  background: #222;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  font-size: 1.1em;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.wrapper.profile input[type="text"]:focus,
+.wrapper.profile input[type="email"]:focus,
+.wrapper.profile input[type="password"]:focus {
+  border-color: #ffea00;
+  background: #181818;
+}
+
+.wrapper.profile label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #FFD700;
+  background: transparent;
+  pointer-events: none;
+  transition: 0.2s;
+  font-size: 1em;
+}
+
+.wrapper.profile input:focus + label,
+.wrapper.profile input:not(:placeholder-shown) + label {
+  top: -10px;
+  left: 10px;
+  font-size: 0.9em;
+  color: #ffea00;
+  background: #1a1a1a;
+  padding: 0 4px;
+}
+
+.wrapper.profile input[type="submit"] {
+  background: #FFD700;
+  color: #181818;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  font-weight: bold;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.wrapper.profile input[type="submit"]:hover {
+  background: #ffea00;
+  color: #222;
+}

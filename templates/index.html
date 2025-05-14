@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Persona 4 Golden</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/yu.png') }}">
+</head>
+<body>
+  <div class="profile-link">
+    <a href="{{ url_for('profile') }}" class="profile-container">
+      <img id="profile-pic-nav" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile Picture" class="profile-pic">
+      <span class="profile-username">{{ session['user'] }}</span>
+    </a>
+  </div>
+  <header>
+    <h1>Persona 4 Golden</h1>
+  </header>
+  <nav class="navbar">
+    <ul>
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('team') }}">Team</a></li>
+    <li><a href="{{ url_for('stats') }}">Stats</a></li>
+    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+  </ul>
+  </nav>
+  <div class="home-screen">
+    <div class="video-container" style="position:relative;">
+      <button id="unmuteVideo" class="video-mute-btn">🔊</button>
+      <video id="introVideo" autoplay loop playsinline muted>
+        <source src="{{ url_for('static', filename='video/intro.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    <!-- 🟡 Welcome Text -->
+    <h1>Welcome to Inaba</h1>
+    <p>Uncover the truth. Strengthen your bonds. Dive into the TV world.</p>
+    <a class="btn" href="{{ url_for('team') }}">View Party Members</a>
+    <a href="https://store.steampowered.com/app/1113000/Persona_4_Golden/" target="_blank" class="btn steam-btn">
+      <img src="{{ url_for('static', filename='images/steam_icon.png') }}" alt="Steam" style="height:1em;vertical-align:middle;margin-right:8px;">
+      Get Persona 4 Golden on Steam
+    </a>
+  </div>
+
+  <script>
+    // Mute/unmute logic
+    const video = document.getElementById("introVideo");
+    const unmuteBtn = document.getElementById("unmuteVideo");
+    unmuteBtn.addEventListener("click", () => {
+      video.muted = !video.muted;
+      unmuteBtn.textContent = video.muted ? "🔊" : "🔇";
+    });
+
+    // Load profile picture from localStorage if available
+    const navPic = localStorage.getItem('profilePic');
+    if (navPic) {
+      document.getElementById('profile-pic-nav').src = navPic;
+    }
+  </script>
+</body>
+</html>

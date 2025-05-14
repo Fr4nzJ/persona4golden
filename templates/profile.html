@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="navbar">
+  <ul>
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('team') }}">Team</a></li>
+    <li><a href="{{ url_for('stats') }}">Stats</a></li>
+    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+  </ul>
+</nav>
+<div class="wrapper profile">
+  <h2 class="title">Profile</h2>
+  <div class="profile-info">
+    <div class="profile-pic-container">
+      <img id="profile-pic" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile Picture" class="profile-pic">
+    </div>
+    <div class="profile-details">
+      <div class="profile-field"><strong>Username:</strong> {{ user.username }}</div>
+      <div class="profile-field"><strong>Email:</strong> {{ user.email }}</div>
+    </div>
+    <div class="steam-section" style="margin-top:24px;">
+      <h3>Steam Profile</h3>
+      {% if user.steam_id %}
+        <div class="steam-profile">
+          <img src="{{ user.steam_avatar }}" alt="Steam Avatar" style="width:64px;height:64px;border-radius:50%;border:2px solid #171a21;">
+          <div>
+            <strong>{{ user.steam_name }}</strong><br>
+            <a href="https://steamcommunity.com/profiles/{{ user.steam_id }}" target="_blank">View Steam Profile</a>
+          </div>
+        </div>
+      {% else %}
+        <a href="{{ url_for('link_steam') }}" class="btn steam-btn">Link your Steam Account</a>
+      {% endif %}
+    </div>
+    <div class="profile-actions">
+      <a href="{{ url_for('edit_profile') }}" class="btn profile-edit-btn">Edit Profile</a>
+      <a href="{{ url_for('logout') }}" class="btn profile-logout-btn">Logout</a>
+    </div>
+  </div>
+</div>
+<script>
+  // Load profile picture from localStorage if available
+  const pic = localStorage.getItem('profilePic');
+  if (pic) {
+    document.getElementById('profile-pic').src = pic;
+  }
+</script>
+{% endblock %}

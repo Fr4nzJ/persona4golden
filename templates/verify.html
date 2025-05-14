@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Verification - Persona Web App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/yu.png') }}">
+</head>
+<body class="login-signup">
+    <div class="wrapper verify">
+        <h2 class="title">Email Verification</h2>
+        <p>Please check your inbox for the verification code sent to your email.</p>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <form action="{{ url_for('verify_email', email=email) }}" method="POST">
+            <div class="field">
+                <input type="text" name="verification_code" required placeholder=" ">
+                <label>Enter Verification Code</label>
+            </div>
+            <div class="field">
+                <input type="submit" value="Verify">
+            </div>
+        </form>
+        <div class="resend-link" style="text-align:center; margin-top:15px;">
+            <a href="{{ url_for('resend_email', email=email) }}">Didn't receive the code? Resend</a>
+        </div>
+    </div>
+</body>
+</html>
