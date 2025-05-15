@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discussion - Persona 4 Golden</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/yu.png') }}">
+</head>
+<body>
+  <div class="profile-link">
+    <a href="{{ url_for('profile') }}" class="profile-container">
+      <img id="profile-pic-nav" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile Picture" class="profile-pic">
+      <span class="profile-username">{{ session['user'] }}</span>
+    </a>
+  </div>
+  <header>
+    <h1>Discussion</h1>
+  </header>
+  <nav class="navbar">
+    <ul>
+      <li><a href="{{ url_for('home') }}">Home</a></li>
+      <li><a href="{{ url_for('team') }}">Team</a></li>
+      <li><a href="{{ url_for('stats') }}">Stats</a></li>
+      <li><a href="{{ url_for('profile') }}">Profile</a></li>
+      <li><a href="{{ url_for('discussion') }}">Discussion</a></li>
+      <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+  </nav>
+  <div class="chat-container">
+    <div id="chat-messages" class="chat-messages"></div>
+    <form id="chat-form" autocomplete="off">
+      <input type="text" id="chat-input" placeholder="Type your message..." maxlength="200" required>
+      <button type="submit" class="btn">Send</button>
+    </form>
+  </div>
+  <script>
+    // Load profile picture from localStorage if available
+    const navPic = localStorage.getItem('profilePic');
+    if (navPic) {
+      document.getElementById('profile-pic-nav').src = navPic;
+    }
+
+    // Chat logic
+    async function fetchMessages() {
+      const res = await fetch('{{ url_for("get_messages") }}');
+      const data = await res.json();
+      const chat = document.getElementById('chat-messages');
+      chat.innerHTML = '';
+      data.messages.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'chat-message';
+        div.innerHTML = `<span class="chat-user">${msg.user}</span>
+                         <span class="chat-time">${msg.timestamp}</span>
+                         <div class="chat-text">${msg.text}</div>`;
+        chat.appendChild(div);
+      });
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      await fetch('{{ url_for("send_message") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text})
+      });
+      input.value = '';
+      fetchMessages();
+    });
+
+    // Poll for new messages every 2 seconds
+    setInterval(fetchMessages, 2000);
+    fetchMessages();
+  </script>
+</body>
+</html>

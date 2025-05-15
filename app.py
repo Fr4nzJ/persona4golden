@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
 from neo4j import GraphDatabase
 import smtplib
@@ -9,6 +9,7 @@ from email.mime.text import MIMEText
 from flask_openid import OpenID
 import re
 import requests
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -19,7 +20,7 @@ oid = OpenID(app, app.config['OPENID_STORE_FS_PATH'])
 
 # Steam OpenID URL
 STEAM_OPENID_URL = 'https://steamcommunity.com/openid/login'
-STEAM_API_KEY = "YOUR_STEAM_API_KEY"  # Get from https://steamcommunity.com/dev/apikey
+STEAM_API_KEY = "D07EC4B741BCF3749C0D25980BD1B7F8"  # Get from https://steamcommunity.com/dev/apikey
 
 def login_required(f):
     @wraps(f)
@@ -505,6 +506,33 @@ def admin_delete_user(email):
         session_neo.run("MATCH (u:User {email: $email}) DETACH DELETE u", email=email)
     flash('User deleted.', 'info')
     return redirect(url_for('admin_dashboard'))
+
+# In-memory message store (replace with DB for production)
+chat_messages = []
+
+@app.route('/discussion')
+def discussion():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template('discussion.html')
+
+@app.route('/get_messages')
+def get_messages():
+    return jsonify(messages=chat_messages[-100:])  # last 100 messages
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    if 'user' not in session:
+        return jsonify({'error': 'Not logged in'}), 403
+    data = request.get_json()
+    text = data.get('text', '').strip()
+    if text:
+        chat_messages.append({
+            'user': session['user'],
+            'text': text,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     app.run(debug=True)

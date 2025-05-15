@@ -871,3 +871,51 @@ body::before {
   background: #ffea00;
   color: #222;
 }
+
+/* Chat styles */
+.chat-container {
+  max-width: 600px;
+  margin: 2em auto;
+  background: #222;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0008;
+  padding: 1em;
+}
+.chat-messages {
+  height: 300px;
+  overflow-y: auto;
+  background: #181818;
+  border-radius: 8px;
+  padding: 1em;
+  margin-bottom: 1em;
+}
+.chat-message {
+  margin-bottom: 1em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid #444;
+}
+.chat-user {
+  color: #ffd700;
+  font-weight: bold;
+  margin-right: 1em;
+}
+.chat-time {
+  color: #aaa;
+  font-size: 0.9em;
+  margin-right: 1em;
+}
+.chat-text {
+  margin-top: 0.2em;
+  color: #fff;
+}
+#chat-input {
+  width: 75%;
+  padding: 0.5em;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
+}
+#chat-form .btn {
+  margin-left: 1em;
+}
