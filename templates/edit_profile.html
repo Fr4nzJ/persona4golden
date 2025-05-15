@@ -3,12 +3,12 @@
 <body class="login-signup">
   <div class="wrapper edit-profile">
     <h2 class="title">Edit Profile</h2>
-    <form method="POST" class="edit-profile-form" autocomplete="off" onsubmit="saveProfilePic()">
+    <form method="POST" class="edit-profile-form" autocomplete="off" enctype="multipart/form-data">
       <div class="profile-pic-container" style="margin-bottom:18px;">
-        <img id="edit-profile-pic" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile Picture" class="profile-pic">
+        <img id="edit-profile-pic" src="{{ url_for('static', filename=user.profile_pic or 'images/default_profile.png') }}" alt="Profile Picture" class="profile-pic">
       </div>
       <div class="field">
-        <input type="file" id="profilePicInput" accept="image/*" style="color:#FFD700;">
+        <input type="file" name="profile_pic" id="profilePicInput" accept="image/*" style="color:#FFD700;">
         <label style="top:-18px;">Change Profile Picture</label>
       </div>
       <div class="field">
@@ -32,26 +32,16 @@
     </div>
   </div>
   <script>
-    // Load current profile picture preview
-    const currentPic = localStorage.getItem('profilePic');
-    if (currentPic) {
-      document.getElementById('edit-profile-pic').src = currentPic;
-    }
-    // Preview and save to localStorage
+    // Optional: Preview selected image before upload
     document.getElementById('profilePicInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(evt) {
         document.getElementById('edit-profile-pic').src = evt.target.result;
-        localStorage.setItem('profilePic', evt.target.result);
       };
       reader.readAsDataURL(file);
     });
-    // Save on submit (optional, since we already save on change)
-    function saveProfilePic() {
-      // No-op, handled above
-    }
   </script>
 </body>
 {% endblock %}

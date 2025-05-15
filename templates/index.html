@@ -10,7 +10,7 @@
 <body>
   <div class="profile-link">
     <a href="{{ url_for('profile') }}" class="profile-container">
-      <img id="profile-pic-nav" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile Picture" class="profile-pic">
+      <img id="profile-pic-nav" src="{{ url_for('static', filename=profile_pic) }}" alt="Profile Picture" class="profile-pic">
       <span class="profile-username">{{ session['user'] }}</span>
     </a>
   </div>
@@ -53,12 +53,6 @@
       video.muted = !video.muted;
       unmuteBtn.textContent = video.muted ? "🔊" : "🔇";
     });
-
-    // Load profile picture from localStorage if available
-    const navPic = localStorage.getItem('profilePic');
-    if (navPic) {
-      document.getElementById('profile-pic-nav').src = navPic;
-    }
   </script>
 </body>
 </html>

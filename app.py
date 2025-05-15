@@ -10,18 +10,46 @@ from flask_openid import OpenID
 import re
 import requests
 from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
+import jwt  # PyJWT library for JWT creation
+
+def generate_jwt(user, secret_key='your_secret_key', algorithm='HS256'):
+    """
+    Generates a JWT token for the given user dictionary.
+    """
+    payload = {
+        'username': user.get('username'),
+        'email': user.get('email'),
+        'steam_id': user.get('steam_id'),
+        'iat': datetime.utcnow()
+    }
+    return jwt.encode(payload, secret_key, algorithm=algorithm)
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
+# Initialize Neo4j driver
+NEO4J_URI = "bolt://localhost:7687"  # Change as needed
+NEO4J_USER = "neo4j"                 # Change as needed
+NEO4J_PASSWORD = "Fr4nzJermido"          # Change as needed
+driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
+
 # Add this to your app config
-app.config['OPENID_STORE_FS_PATH'] = '/tmp/flask_openid'
+app.config['OPENID_STORE_FS_PATH'] = os.path.join(app.root_path, 'flask_openid_store')
 oid = OpenID(app, app.config['OPENID_STORE_FS_PATH'])
 
 # Steam OpenID URL
 STEAM_OPENID_URL = 'https://steamcommunity.com/openid/login'
 STEAM_API_KEY = "D07EC4B741BCF3749C0D25980BD1B7F8"  # Get from https://steamcommunity.com/dev/apikey
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -31,82 +59,235 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/steam_login')
-@oid.loginhandler
+def get_steam_id_from_openid(identity_url):
+    """
+    Extracts the Steam ID from the OpenID identity URL.
+    """
+    if not identity_url:
+        return None
+    match = re.search(r'https://steamcommunity.com/openid/id/(\d+)', identity_url)
+    if match:
+        return match.group(1)
+    return None
+
+@app.route("/steam_login")
 def steam_login():
-    return oid.try_login(STEAM_OPENID_URL, ask_for=[])
+    if "openid.identity" not in request.args:
+        steam_openid_url = (
+            "https://steamcommunity.com/openid/login"
+            "?openid.ns=http://specs.openid.net/auth/2.0"
+            "&openid.mode=checkid_setup"
+            f"&openid.return_to={url_for('steam_login', _external=True)}"
+            f"&openid.realm={request.host_url}"
+            "&openid.identity=http://specs.openid.net/auth/2.0/identifier_select"
+            "&openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select"
+        )
+        return redirect(steam_openid_url)
 
-@app.route('/link_steam')
-@login_required
+    steam_id = get_steam_id_from_openid(request.args.get("openid.identity"))
+    if not steam_id:
+        flash("Steam login failed.", "danger")
+        return redirect(url_for("login"))
+
+    # --- Linking Steam account to existing user ---
+    if session.get("linking_steam"):
+        email = session.get("email")
+        if not email:
+            flash("You must be logged in to link your Steam account.", "warning")
+            return redirect(url_for("login"))
+
+        with driver.session() as neo_session:
+            result = neo_session.run(
+                "MATCH (u:User {steam_id: $steam_id}) RETURN u.email AS email",
+                steam_id=steam_id
+            ).single()
+        if result and result["email"] != email:
+            flash("This Steam account is already linked to another user.", "danger")
+            session.pop("linking_steam", None)
+            return redirect(url_for("profile"))
+
+        try:
+            r = requests.get(
+                "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/",
+                params={"key": STEAM_API_KEY, "steamids": steam_id}
+            )
+            r.raise_for_status()
+            data = r.json().get("response", {}).get("players", [])
+        except Exception as e:
+            flash(f"Failed to fetch Steam profile: {e}", "danger")
+            return redirect(url_for("profile"))
+
+        if data:
+            player = data[0]
+            steam_name = player.get("personaname", "")
+            steam_avatar = player.get("avatarfull", "")
+        else:
+            steam_name = ""
+            steam_avatar = ""
+
+        with driver.session() as neo_session:
+            neo_session.run("""
+                MATCH (u:User {email: $email})
+                SET u.steam_id = $steam_id,
+                    u.steam_name = $steam_name,
+                    u.steam_avatar = $steam_avatar
+            """, email=email, steam_id=steam_id, steam_name=steam_name, steam_avatar=steam_avatar)
+
+        session.pop("linking_steam", None)
+        flash("Steam account linked to your profile!", "success")
+        return redirect(url_for("profile"))
+
+    # --- Normal Steam login/signup ---
+    with driver.session() as neo_session:
+        result = neo_session.run("MATCH (u:User {steam_id: $steam_id}) RETURN u", steam_id=steam_id).single()
+
+    if result:
+        user_node = result["u"]
+        user = dict(user_node)
+        session["user"] = user.get("username")
+        session["email"] = user.get("email")
+        token = generate_jwt(user)
+        session["jwt_token"] = token
+        flash("Logged in with Steam!", "success")
+        return redirect(url_for("home"))
+
+    session["steam_id"] = steam_id
+    return redirect(url_for("steam_signup"))
+
+
+@app.route("/link_steam")
 def link_steam():
-    return oid.try_login(STEAM_OPENID_URL, ask_for=[])
+    session["linking_steam"] = True
+    return redirect("https://steamcommunity.com/openid/login"
+                    "?openid.ns=http://specs.openid.net/auth/2.0"
+                    "&openid.mode=checkid_setup"
+                    "&openid.return_to=http://localhost:5000/steam_login"
+                    "&openid.realm=http://localhost:5000/"
+                    "&openid.identity=http://specs.openid.net/auth/2.0/identifier_select"
+                    "&openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select")
 
-@oid.after_login
-def after_steam_login(resp):
-    steam_id_match = re.search(r'https://steamcommunity.com/openid/id/(\d+)', resp.identity_url)
-    if steam_id_match:
-        steam_id = steam_id_match.group(1)
-        # Fetch Steam profile info
+
+@app.route("/steam_signup", methods=["GET", "POST"])
+def steam_signup():
+    steam_id = session.get("steam_id")
+    steam_name = session.get("steam_name")
+    steam_avatar = session.get("steam_avatar")
+
+    if not steam_id:
+        flash("Steam ID missing. Please try again.", "danger")
+        return redirect(url_for("login"))
+
+    if not steam_name or not steam_avatar:
         r = requests.get(
             "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/",
             params={"key": STEAM_API_KEY, "steamids": steam_id}
         )
-        player = r.json()["response"]["players"][0] if r.json()["response"]["players"] else {}
-        steam_name = player.get("personaname", "")
-        steam_avatar = player.get("avatarfull", "")
+        data = r.json().get("response", {}).get("players", [])
+        if data:
+            player = data[0]
+            steam_name = player.get("personaname")
+            steam_avatar = player.get("avatarfull")
+            session["steam_name"] = steam_name
+            session["steam_avatar"] = steam_avatar
+        else:
+            steam_name = ""
+            steam_avatar = ""
 
-        # Save to Neo4j
+    if request.method == "POST":
+        username = request.form["username"].strip()
+        email = request.form["email"].strip()
+
+        if not username or not email:
+            flash("Username and email are required.", "danger")
+            return render_template("steam_signup.html", steam_id=steam_id, steam_name=steam_name, steam_avatar=steam_avatar, username=username, email=email)
+
+        with driver.session() as db:
+            result = db.run(
+                "MATCH (u:User) WHERE u.username = $username OR u.email = $email RETURN u LIMIT 1",
+                username=username, email=email
+            ).single()
+            if result:
+                flash("Username or email already exists.", "danger")
+                return render_template("steam_signup.html", steam_id=steam_id, steam_name=steam_name, steam_avatar=steam_avatar, username=username, email=email)
+
+            result = db.run("""
+                CREATE (u:User {
+                    id: randomUUID(),
+                    username: $username,
+                    email: $email,
+                    steam_id: $steam_id,
+                    steam_name: $steam_name,
+                    steam_avatar: $steam_avatar
+                }) RETURN u
+            """, username=username, email=email, steam_id=steam_id, steam_name=steam_name, steam_avatar=steam_avatar).single()
+
+        session.pop("steam_id", None)
+        session.pop("steam_name", None)
+        session.pop("steam_avatar", None)
+        user = result["u"]
+        session["user"] = user["username"]
+        session["email"] = user["email"]
+        token = generate_jwt(user)
+        flash("Account created successfully!", "success")
+        return redirect(url_for("home"))
+
+    return render_template(
+        "steam_signup.html",
+        steam_id=steam_id,
+        steam_name=steam_name,
+        steam_avatar=steam_avatar,
+        username="",
+        email=""
+    )
+
+
+@oid.after_login
+def after_steam_login(resp):
+    if not resp or not resp.identity_url:
+        flash("Steam login failed.", "danger")
+        return redirect(url_for('login'))
+
+    match = re.search(r'https://steamcommunity.com/openid/id/(\d+)', resp.identity_url)
+    if not match:
+        flash("Invalid Steam response.", "danger")
+        return redirect(url_for('login'))
+
+    steam_id = match.group(1)
+
+    r = requests.get("https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/",
+                     params={"key": STEAM_API_KEY, "steamids": steam_id})
+    data = r.json().get("response", {}).get("players", [])
+    if not data:
+        flash("Unable to fetch Steam profile.", "danger")
+        return redirect(url_for('login'))
+
+    player = data[0]
+    steam_name = player.get("personaname")
+    steam_avatar = player.get("avatarfull")
+
+    if session.get('linking_steam') is True:
         email = session.get('email')
-        with driver.session() as session_neo:
-            session_neo.run(
-                """
-                MATCH (u:User {email: $email})
-                SET u.steam_id = $steam_id, u.steam_name = $steam_name, u.steam_avatar = $steam_avatar
-                """,
-                email=email, steam_id=steam_id, steam_name=steam_name, steam_avatar=steam_avatar
-            )
-        flash("Steam account linked!", "success")
-        return redirect(url_for('profile'))
-    flash("Failed to link Steam account.", "danger")
-    return redirect(url_for('profile'))
-
-NEO4J_URI = "bolt://localhost:7687"
-NEO4J_USER = "neo4j"
-NEO4J_PASSWORD = "Fr4nzJermido"
-
-driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user' not in session:
-            flash('Please log in to access this page.', 'warning')
+        if not email:
+            flash("You must be logged in to link your Steam account.", "warning")
             return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
-email_codes = {}  # Temporary store: {email: code}
+        with driver.session() as session_neo:
+            session_neo.run("""
+                MATCH (u:User {email: $email})
+                SET u.steam_id = $steam_id,
+                    u.steam_name = $steam_name,
+                    u.steam_avatar = $steam_avatar
+            """, email=email, steam_id=steam_id, steam_name=steam_name, steam_avatar=steam_avatar)
 
-def send_verification_email(receiver_email, code):
-    sender_email = "ermido09a@gmail.com"  # Replace with your Gmail
-    app_password = "qlfa kgjy wdrt gszv"     # Replace with App Password
+        flash("Steam account linked to your profile!", "success")
+        return redirect(url_for('profile'))
 
-    subject = "Your Verification Code"
-    body = f"Your verification code is: {code}"
+    else:
+        session["user"] = steam_name
+        session["email"] = ""
+        flash("Logged in via Steam!", "success")
+        return redirect(url_for('home'))
 
-    msg = MIMEText(body)
-    msg['Subject'] = subject
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
-
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender_email, app_password)
-            server.sendmail(sender_email, receiver_email, msg.as_string())
-        return True
-    except Exception as e:
-        print("Email failed:", e)
-        return False
 
 
 characters = [
@@ -279,10 +460,22 @@ characters = [
         ]
     }
 ]
+
+def get_user_profile_pic():
+    email = session.get('email')
+    with driver.session() as session_neo:
+        result = session_neo.run(
+            "MATCH (u:User {email: $email}) RETURN u.profile_pic AS profile_pic",
+            email=email
+        )
+        record = result.single()
+        return record["profile_pic"] if record and record["profile_pic"] else "images/default_profile.png"
+
 @app.route('/')
 @login_required
 def home():
-    return render_template('index.html')
+    profile_pic = get_user_profile_pic()
+    return render_template('index.html', profile_pic=profile_pic)
 
 @app.route('/team')
 @login_required
@@ -309,13 +502,11 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Admin login check
         if username == 'admin' and password == 'admin':
             session['admin'] = True
             flash('Logged in as admin.', 'success')
             return redirect(url_for('admin_dashboard'))
 
-        # Regular user login
         with driver.session() as session_neo:
             result = session_neo.run(
                 """
@@ -341,9 +532,31 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('user', None)
-    session.pop('email', None)  # <-- Clear email from session
+    session.pop('email', None)
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
+
+email_codes = {}
+
+def send_verification_email(email, code):
+    sender_email = "ermido09a@gmail.com"
+    sender_password = "Fr4nzJermido"
+    subject = "Your Persona 4 Golden Verification Code"
+    body = f"Your verification code is: {code}"
+
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = sender_email
+    msg["To"] = email
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, [email], msg.as_string())
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -367,7 +580,7 @@ def signup():
 @app.route('/verify/<email>', methods=['GET', 'POST'])
 def verify_email(email):
     if request.method == 'POST':
-        input_code = request.form.get('verification_code')  # <-- Fix here
+        input_code = request.form.get('verification_code')
 
         if email in email_codes and input_code == email_codes[email]['code']:
             username = email_codes[email]['username']
@@ -396,7 +609,7 @@ def profile():
         result = session_neo.run(
             """
             MATCH (u:User {email: $email})
-            RETURN u.username AS username, u.email AS email, u.steam_id AS steam_id, u.steam_name AS steam_name, u.steam_avatar AS steam_avatar
+            RETURN u.username AS username, u.email AS email, u.steam_id AS steam_id, u.steam_name AS steam_name, u.steam_avatar AS steam_avatar, u.profile_pic AS profile_pic
             """,
             email=email
         )
@@ -407,29 +620,76 @@ def profile():
             "steam_id": record["steam_id"] if record else None,
             "steam_name": record["steam_name"] if record else None,
             "steam_avatar": record["steam_avatar"] if record else None,
+            "profile_pic": record["profile_pic"] if record and record["profile_pic"] else "images/default_profile.png"
         }
     return render_template('profile.html', user=user)
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
-    email = session.get('email')  # <-- Use email from session
+    email = session.get('email')
     with driver.session() as session_neo:
         result = session_neo.run(
-            "MATCH (u:User {email: $email}) RETURN u.username AS username, u.email AS email",
+            "MATCH (u:User {email: $email}) RETURN u.username AS username, u.email AS email, u.profile_pic AS profile_pic",
             email=email
         )
         record = result.single()
         user = {
             "username": record["username"] if record else "",
-            "email": record["email"] if record else email
+            "email": record["email"] if record else email,
+            "profile_pic": record["profile_pic"] if record and record["profile_pic"] else "images/default_profile.png"
         }
-    # Handle POST logic here as needed...
+
+    if request.method == 'POST':
+        username = request.form['username']
+        new_email = request.form['email']
+        password = request.form['password']
+        file = request.files.get('profile_pic')
+        profile_pic_path = user["profile_pic"]
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            upload_folder = os.path.join(app.root_path, UPLOAD_FOLDER)
+            os.makedirs(upload_folder, exist_ok=True)
+            filepath = os.path.join(upload_folder, filename)
+            file.save(filepath)
+            profile_pic_path = f'uploads/{filename}'
+            with driver.session() as session_neo:
+                session_neo.run(
+                    """
+                    MATCH (u:User {email: $email})
+                    SET u.username = $username,
+                        u.email = $new_email,
+                        u.profile_pic = $profile_pic
+                    """,
+                    email=email,
+                    username=username,
+                    new_email=new_email,
+                    profile_pic=profile_pic_path
+                )
+        else:
+            with driver.session() as session_neo:
+                session_neo.run(
+                    """
+                    MATCH (u:User {email: $email})
+                    SET u.username = $username,
+                        u.email = $new_email
+                    """,
+                    email=email,
+                    username=username,
+                    new_email=new_email
+                )
+            if password:
+                pass
+
+        session['email'] = new_email
+
+        return redirect(url_for('profile'))
+
     return render_template('edit_profile.html', user=user)
 
 @app.route('/resend/<email>')
 def resend_email(email):
-    # Generate a new code and resend the verification email
     code = str(random.randint(100000, 999999))
     if email in email_codes:
         username = email_codes[email]['username']
@@ -456,9 +716,9 @@ def admin_login():
 
 @app.route('/admin_logout')
 def admin_logout():
-    session.pop('admin', None)  # Remove admin session
+    session.pop('admin', None)
     flash('Logged out as admin.', 'info')
-    return redirect(url_for('login'))  # Redirect to normal login page
+    return redirect(url_for('login'))
 
 def admin_required(f):
     @wraps(f)
@@ -507,7 +767,6 @@ def admin_delete_user(email):
     flash('User deleted.', 'info')
     return redirect(url_for('admin_dashboard'))
 
-# In-memory message store (replace with DB for production)
 chat_messages = []
 
 @app.route('/discussion')
@@ -518,7 +777,7 @@ def discussion():
 
 @app.route('/get_messages')
 def get_messages():
-    return jsonify(messages=chat_messages[-100:])  # last 100 messages
+    return jsonify(messages=chat_messages[-100:])
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
@@ -533,6 +792,28 @@ def send_message():
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         })
     return jsonify({'success': True})
+
+import os
+
+@app.route('/upload_profile_pic', methods=['POST'])
+def upload_profile_pic():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    file = request.files['profile_pic']
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        upload_folder = os.path.join(app.root_path, 'static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        filepath = os.path.join(upload_folder, filename)
+        file.save(filepath)
+        email = session.get('email')
+        with driver.session() as session_neo:
+            session_neo.run(
+                "MATCH (u:User {email: $email}) SET u.profile_pic = $profile_pic",
+                email=email,
+                profile_pic=f'uploads/{filename}'
+            )
+    return redirect(url_for('profile'))
 
 if __name__ == '__main__':
     app.run(debug=True)

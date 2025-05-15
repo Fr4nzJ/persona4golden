@@ -10,6 +10,12 @@
 <body class="login-signup">
     <div class="wrapper signup">
       <div class="title">Signup Form</div>
+      <div style="text-align:center; margin: 1.5em 0;">
+        <a href="{{ url_for('steam_login') }}" class="btn steam-btn">
+          <img src="{{ url_for('static', filename='images/steam_icon.png') }}" alt="Steam" style="height:24px;vertical-align:middle;margin-right:8px;">
+          Sign in with Steam
+        </a>
+      </div>
       <form action="{{ url_for('signup') }}" method="POST">
         <div class="field">
           <input type="text" name="username" required>
@@ -25,6 +31,12 @@
         </div>
         <div class="field">
           <input type="submit" value="Sign Up">
+        </div>
+        <div class="steam-signup-section" style="text-align:center; margin: 1em 0;">
+          <a href="{{ url_for('steam_login') }}" class="btn steam-btn">
+            <img src="{{ url_for('static', filename='images/steam_icon.png') }}" alt="Steam" style="height:24px;vertical-align:middle;margin-right:8px;">
+            Sign up with Steam
+          </a>
         </div>
         <div class="signup-link">
           Already have an account? <a href="{{ url_for('login') }}">Login</a>
